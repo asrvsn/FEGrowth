@@ -53,22 +53,21 @@ bool FEGrowthUncoupledMaterial::Validate()
 }
 
 
-// Project deformation gradient
-void FEGrowthUncoupledMaterial::projectDeformation(FEMaterialPoint& mp)
+// Execute callable with projected deformation gradient
+template <typename T>
+T FEGrowthUncoupledMaterial::WithProjectedDeformation(FEMaterialPoint& mp, std::function<T(FEMaterialPoint&)> f)
 {
 	FEElasticMaterialPoint& pt = *mp.ExtractData<FEElasticMaterialPoint>();
-    F_true = pt.m_F;
-    detF_true = pt.m_J;
-    pt.m_F = pt.m_F * Fg;
-    pt.m_J = pt.m_J * detFgi;
-}
-
-// Reset deformation gradient
-void FEGrowthUncoupledMaterial::resetDeformation(FEMaterialPoint& mp)
-{
-	FEElasticMaterialPoint& pt = *mp.ExtractData<FEElasticMaterialPoint>();
-    pt.m_F = F_true;
-    pt.m_J = detF_true;
+    mat3d F = pt.m_F;
+    double J = pt.m_J;
+    mat3d Fe = pt.m_F * Fgi;
+    double Je = pt.m_J * detFgi;
+    pt.m_F = Fe;
+    pt.m_J = Je;
+    T result = f(mp);
+    pt.m_F = F;
+    pt.m_J = J;
+    return result;
 }
 
 //-----------------------------------------------------------------------------
@@ -76,10 +75,10 @@ void FEGrowthUncoupledMaterial::resetDeformation(FEMaterialPoint& mp)
 //! two terms, namely the deviatoric stress and the pressure. 
 mat3ds FEGrowthUncoupledMaterial::Stress(FEMaterialPoint &mp)
 {
-    projectDeformation(mp);
-    mat3ds S = GetBaseMaterial()->Stress(mp);
-    resetDeformation(mp);
-	return S;
+    std::function<mat3ds(FEMaterialPoint&)> f = [this](FEMaterialPoint &mp){
+        return this->GetBaseMaterial()->Stress(mp);
+    };
+    return WithProjectedDeformation(mp, f);
 }
 
 //------------------------------------------------------------------------------
@@ -91,10 +90,10 @@ mat3ds FEGrowthUncoupledMaterial::Stress(FEMaterialPoint &mp)
 //!
 tens4ds FEGrowthUncoupledMaterial::Tangent(FEMaterialPoint &mp)
 {
-    projectDeformation(mp);
-    tens4ds C = GetBaseMaterial()->Tangent(mp);
-    resetDeformation(mp);
-    return C;
+    std::function<tens4ds(FEMaterialPoint&)> f = [this](FEMaterialPoint &mp){
+        return this->GetBaseMaterial()->Tangent(mp);
+    };
+    return WithProjectedDeformation(mp, f);
 }
 
 //-----------------------------------------------------------------------------
@@ -102,10 +101,10 @@ tens4ds FEGrowthUncoupledMaterial::Tangent(FEMaterialPoint &mp)
 //! two terms, namely the deviatoric sed and U(J).
 double FEGrowthUncoupledMaterial::StrainEnergyDensity(FEMaterialPoint &mp)
 {
-    projectDeformation(mp);
-    double sed = GetBaseMaterial()->StrainEnergyDensity(mp);
-    resetDeformation(mp);
-    return sed;
+    std::function<double(FEMaterialPoint&)> f = [this](FEMaterialPoint &mp){
+        return this->GetBaseMaterial()->StrainEnergyDensity(mp);
+    };
+    return WithProjectedDeformation(mp, f);
 }
 
 //-----------------------------------------------------------------------------
@@ -113,10 +112,10 @@ double FEGrowthUncoupledMaterial::StrainEnergyDensity(FEMaterialPoint &mp)
 //! two terms, namely the deviatoric sed and U(J).
 double FEGrowthUncoupledMaterial::StrongBondSED(FEMaterialPoint &mp)
 {
-    projectDeformation(mp);
-    double sed = GetBaseMaterial()->StrongBondSED(mp);
-    resetDeformation(mp);
-    return sed;
+    std::function<double(FEMaterialPoint&)> f = [this](FEMaterialPoint &mp){
+        return this->GetBaseMaterial()->StrongBondSED(mp);
+    };
+    return WithProjectedDeformation(mp, f);
 }
 
 //-----------------------------------------------------------------------------
@@ -124,10 +123,10 @@ double FEGrowthUncoupledMaterial::StrongBondSED(FEMaterialPoint &mp)
 //! two terms, namely the deviatoric sed and U(J).
 double FEGrowthUncoupledMaterial::WeakBondSED(FEMaterialPoint &mp)
 {
-    projectDeformation(mp);
-    double sed = GetBaseMaterial()->WeakBondSED(mp);
-    resetDeformation(mp);
-    return sed;
+    std::function<double(FEMaterialPoint&)> f = [this](FEMaterialPoint &mp){
+        return this->GetBaseMaterial()->WeakBondSED(mp);
+    };
+    return WithProjectedDeformation(mp, f);
 }
 
 //-----------------------------------------------------------------------------

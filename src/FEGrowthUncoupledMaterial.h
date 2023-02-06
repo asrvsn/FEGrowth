@@ -61,14 +61,12 @@ private:
     double m_g_iso;                 // Isotropic growth factor
     
 private:
-    void projectDeformation(FEMaterialPoint& pt);
-    void resetDeformation(FEMaterialPoint& pt);
+    template <typename T>
+    T WithProjectedDeformation(FEMaterialPoint& mp, std::function<T(FEMaterialPoint&)> callback);
     mat3ds  Fg;             // Growth tensor
     mat3ds  Fgi;            // Inverse growth tensor
     double  detFg;          // 
     double  detFgi;         // 
-    mat3d   F_true;         // True deformation gradient
-    double  detF_true;      // True volumetric change
     
 public:
 

@@ -2,6 +2,7 @@
 // with the FEBio framework. 
 #include <FECore/FECoreKernel.h>
 #include "FEGrowthUncoupledMaterial.h"
+#include "FEGrowthCoupledMaterial.h"
 
 //-----------------------------------------------------------------------------
 // This required function returns the version of the FEBio SDK that is being
@@ -26,7 +27,8 @@ FECORE_EXPORT void PluginInitialize(FECoreKernel& febio)
 
 	// This macro registers the new feature and assign a string to it that
 	// can be used to reference this class in the FEBio input file.
-	REGISTER_FECORE_CLASS(FEGrowthUncoupledMaterial, "Growth Uncoupled");
+	REGISTER_FECORE_CLASS(FEGrowthCoupledMaterial, "Growth - coupled")
+	REGISTER_FECORE_CLASS(FEGrowthUncoupledMaterial, "Growth - uncoupled");
 }
 
 //-----------------------------------------------------------------------------

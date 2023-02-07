@@ -1,8 +1,8 @@
 // Uncoupled grown elastic plugin
 
 #pragma once
-#include <FEBioMech/FEElasticMaterial.h>
 #include <FEBioMech/FEUncoupledMaterial.h>
+#include "FEGrowthMaterial.h"
 
 //-----------------------------------------------------------------------------
 //! Base class for uncoupled hyperelastic material formulations.
@@ -23,14 +23,13 @@
 //! to provide the deviatoric stress function and the pressure function as well as their
 //! derivatives. 
 
-class FEGrowthUncoupledMaterial : public FEElasticMaterial
+class FEGrowthUncoupledMaterial : public FEGrowthMaterial
 {
 public:
 	//! constructor
 	FEGrowthUncoupledMaterial(FEModel* pfem);
 
 	//! initialization
-	bool Init() override;
     bool Validate() override;
 
 public:
@@ -58,17 +57,7 @@ private:
     double m_K;			            //!< bulk modulus
 	int m_npmodel;                  //!< pressure model for U(J)
     FEUncoupledMaterial* m_mat;     // Base elastic material
-    double m_g_iso;                 // Isotropic growth factor
-    
-private:
-    template <typename T>
-    T WithProjectedDeformation(FEMaterialPoint& mp, std::function<T(FEMaterialPoint&)> callback);
-    mat3ds  Fg;             // Growth tensor
-    mat3ds  Fgi;            // Inverse growth tensor
-    double  detFg;          // 
-    double  detFgi;         // 
-    
-public:
 
+public:
 	DECLARE_FECORE_CLASS();
 };

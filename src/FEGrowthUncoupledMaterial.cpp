@@ -6,25 +6,17 @@
 
 //-----------------------------------------------------------------------------
 // Material parameters for FEGrowthUncoupledMaterial
-BEGIN_FECORE_CLASS(FEGrowthUncoupledMaterial, FEElasticMaterial)
+BEGIN_FECORE_CLASS(FEGrowthUncoupledMaterial, FEGrowthMaterial)
     ADD_PARAMETER(m_K, FE_RANGE_GREATER_OR_EQUAL(0.0), "k")->setUnits(UNIT_PRESSURE)->MakeTopLevel(true)->setLongName("bulk modulus");
     ADD_PARAMETER(m_npmodel, "pressure_model")->setEnums("default\0NIKE3D\0Abaqus\0Abaqus (GOH)\0")->MakeTopLevel(true);
     ADD_PROPERTY(m_mat, "base_elastic_material");
-    ADD_PARAMETER(m_g_iso, FE_RANGE_GREATER(0.0), "isotropic_growth_factor");
 END_FECORE_CLASS();
 
 //-----------------------------------------------------------------------------
 //! constructor
-FEGrowthUncoupledMaterial::FEGrowthUncoupledMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
+FEGrowthUncoupledMaterial::FEGrowthUncoupledMaterial(FEModel* pfem) : FEGrowthMaterial(pfem)
 {
 	m_mat = nullptr;
-    m_g_iso = 1.0;
-}
-
-//-------------------------------------------------≈----------------------------
-bool FEGrowthUncoupledMaterial::Init()
-{
-	return FEElasticMaterial::Init();
 }
 
 //-----------------------------------------------------------------------------
@@ -37,37 +29,7 @@ bool FEGrowthUncoupledMaterial::Init()
 bool FEGrowthUncoupledMaterial::Validate()
 {
 	if (GetBaseMaterial()->Validate() == false) return false;
-
-	// Define growth tensors
-	Fg = m_g_iso * mat3ds(1,1,1,0,0,0);
-	Fgi = Fg.inverse();
-	detFg = Fg.det();
-	detFgi = 1 / detFg;
-
-    if (detFg <= 0.0) {
-        feLogError("detG must be positive.");
-        return false;
-    }
-
-	return FEElasticMaterial::Validate();
-}
-
-
-// Execute callable with projected deformation gradient
-template <typename T>
-T FEGrowthUncoupledMaterial::WithProjectedDeformation(FEMaterialPoint& mp, std::function<T(FEMaterialPoint&)> f)
-{
-	FEElasticMaterialPoint& pt = *mp.ExtractData<FEElasticMaterialPoint>();
-    mat3d F = pt.m_F;
-    double J = pt.m_J;
-    mat3d Fe = pt.m_F * Fgi;
-    double Je = pt.m_J * detFgi;
-    pt.m_F = Fe;
-    pt.m_J = Je;
-    T result = f(mp);
-    pt.m_F = F;
-    pt.m_J = J;
-    return result;
+    return FEGrowthMaterial::Validate();
 }
 
 //-----------------------------------------------------------------------------

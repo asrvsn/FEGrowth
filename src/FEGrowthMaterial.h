@@ -42,7 +42,6 @@ class FEGrowthMaterial : public FEElasticMaterial
 
     // Parameters
     private:
-        mat3d m_Fg_initial; // Growth tensor
         mat3d m_Fg_final;   // Growth tensor
 
     public:

@@ -1,14 +1,16 @@
+#include <iostream>
+#include <FECore/FEModel.h>
+#include <FECore/FEAnalysis.h>
+
 #include "FEGrowthMaterial.h"
 
 BEGIN_FECORE_CLASS(FEGrowthMaterial, FEElasticMaterial)
-    ADD_PARAMETER(m_Fg_initial, "initial_growth_tensor");
     ADD_PARAMETER(m_Fg_final, "final_growth_tensor");
 END_FECORE_CLASS();
 
 FEGrowthMaterial::FEGrowthMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 {
-    m_Fg_final = mat3d(1,0,0,0,1,0,0,0,1);
-    m_Fg_initial = mat3d(1,0,0,0,1,0,0,0,1);
+    m_Fg_final.unit();
 }
 
 bool FEGrowthMaterial::Init()
@@ -18,7 +20,7 @@ bool FEGrowthMaterial::Init()
 
 bool FEGrowthMaterial::Validate()
 {
-    if (m_Fg_final.det() <= 0.0 || m_Fg_initial.det() <= 0.0) {
+    if (m_Fg_final.det() <= 0.0) {
         feLogError("Growth tensors must have positive determinant.");
         return false;
     }
@@ -27,9 +29,10 @@ bool FEGrowthMaterial::Validate()
 
 FEMaterialPointData* FEGrowthMaterial::CreateMaterialPointData()
 {
-    return new FEGrowthMaterialPoint(
-        GetBaseMaterial()->CreateMaterialPointData(),
-        m_Fg_initial,
-        m_Fg_final
-    );
+    FEAnalysis* currentStep = GetFEModel()->GetCurrentStep();
+    double t0 = currentStep->m_tstart;
+    double tf = (currentStep->m_dt0 * currentStep->m_ntime) + t0;
+    auto pt = new FEGrowthMaterialPoint(GetBaseMaterial()->CreateMaterialPointData());
+    pt->SetTarget(m_Fg_final, t0, tf);
+    return pt;
 }

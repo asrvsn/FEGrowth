@@ -14,12 +14,13 @@ class FEGrowthCoupledMaterial : public FEGrowthMaterial
         mat3ds Stress(FEMaterialPoint& mp) override;
         tens4ds Tangent(FEMaterialPoint& mp) override;
         double StrainEnergyDensity(FEMaterialPoint& mp) override;
-        FEMaterialPointData* CreateMaterialPointData() override;
-        FEElasticMaterial* GetBaseMaterial() { return m_mat; }
 
+        FEElasticMaterial* GetBaseMaterial() override { return m_mat; }
+        
+    // Material parameters
     private:
         FEElasticMaterial* m_mat;   // Base elastic material
-        
+
     public:
         DECLARE_FECORE_CLASS();
 };

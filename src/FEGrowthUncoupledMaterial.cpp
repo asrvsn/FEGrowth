@@ -19,6 +19,16 @@ FEGrowthUncoupledMaterial::FEGrowthUncoupledMaterial(FEModel* pfem) : FEGrowthMa
 	m_mat = nullptr;
 }
 
+bool FEGrowthUncoupledMaterial::Init()
+{
+    FEUncoupledMaterial* m_umat = dynamic_cast<FEUncoupledMaterial*>((FEElasticMaterial*)m_mat);
+    if (m_umat == nullptr) {
+        feLogError("Base elastic material must be uncoupled.");
+        return false;
+    }
+    return FEGrowthMaterial::Init();
+}
+
 //-----------------------------------------------------------------------------
 // This (optional) function is used to validate material parameters.
 // It is recommended to provide a valid range during material parameter definition
@@ -70,8 +80,7 @@ double FEGrowthUncoupledMaterial::StrainEnergyDensity(FEMaterialPoint &mp)
 }
 
 //-----------------------------------------------------------------------------
-//! The strain energy density function calculates the total sed as a sum of
-//! two terms, namely the deviatoric sed and U(J).
+//! The strong-bond strain energy density (for reactive viscoelasticity)
 double FEGrowthUncoupledMaterial::StrongBondSED(FEMaterialPoint &mp)
 {
     std::function<double(FEMaterialPoint&)> f = [this](FEMaterialPoint &mp){
@@ -81,18 +90,11 @@ double FEGrowthUncoupledMaterial::StrongBondSED(FEMaterialPoint &mp)
 }
 
 //-----------------------------------------------------------------------------
-//! The strain energy density function calculates the total sed as a sum of
-//! two terms, namely the deviatoric sed and U(J).
+//! The weak-bond strain energy density (for reactive viscoelasticity)
 double FEGrowthUncoupledMaterial::WeakBondSED(FEMaterialPoint &mp)
 {
     std::function<double(FEMaterialPoint&)> f = [this](FEMaterialPoint &mp){
         return this->GetBaseMaterial()->WeakBondSED(mp);
     };
     return WithProjectedDeformation(mp, f);
-}
-
-//-----------------------------------------------------------------------------
-FEMaterialPointData* FEGrowthUncoupledMaterial::CreateMaterialPointData()
-{
-    return GetBaseMaterial()->CreateMaterialPointData();
 }

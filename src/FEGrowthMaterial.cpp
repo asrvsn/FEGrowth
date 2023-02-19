@@ -1,14 +1,14 @@
 #include "FEGrowthMaterial.h"
 
 BEGIN_FECORE_CLASS(FEGrowthMaterial, FEElasticMaterial)
-    ADD_PARAMETER(m_Fg, "growth_tensor");
-    ADD_PARAMETER(m_Fg_ramp, FE_RANGE_GREATER_OR_EQUAL(0.0), "growth_ramp");
+    ADD_PARAMETER(m_Fg_initial, "initial_growth_tensor");
+    ADD_PARAMETER(m_Fg_final, "final_growth_tensor");
 END_FECORE_CLASS();
 
 FEGrowthMaterial::FEGrowthMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 {
-    m_Fg = mat3d(1,0,0,0,1,0,0,0,1);
-    m_Fg_ramp = 1.0;
+    m_Fg_final = mat3d(1,0,0,0,1,0,0,0,1);
+    m_Fg_initial = mat3d(1,0,0,0,1,0,0,0,1);
 }
 
 bool FEGrowthMaterial::Init()
@@ -18,14 +18,18 @@ bool FEGrowthMaterial::Init()
 
 bool FEGrowthMaterial::Validate()
 {
-    // Define growth 
-	detFg = m_Fg.det();
-    if (detFg <= 0.0) {
-        feLogError("Growth tensor must have positive determinant.");
+    if (m_Fg_final.det() <= 0.0 || m_Fg_initial.det() <= 0.0) {
+        feLogError("Growth tensors must have positive determinant.");
         return false;
     }
-	Fgi = m_Fg.inverse();
-	detFgi = 1 / detFg;
-
 	return FEElasticMaterial::Validate();
+}
+
+FEMaterialPointData* FEGrowthMaterial::CreateMaterialPointData()
+{
+    return new FEGrowthMaterialPoint(
+        GetBaseMaterial()->CreateMaterialPointData(),
+        m_Fg_initial,
+        m_Fg_final
+    );
 }

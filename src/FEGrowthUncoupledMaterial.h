@@ -30,11 +30,12 @@ public:
 	FEGrowthUncoupledMaterial(FEModel* pfem);
 
 	//! initialization
+	bool Init() override;
     bool Validate() override;
 
 public:
+	FEUncoupledMaterial* GetBaseMaterial() override { return m_mat; }
 
-//----------------->
 	//! total Cauchy stress (do not overload!)
 	mat3ds Stress(FEMaterialPoint& mp) final;
 
@@ -45,12 +46,6 @@ public:
 	double StrainEnergyDensity(FEMaterialPoint& pt) final;
     double StrongBondSED(FEMaterialPoint& pt) final;
     double WeakBondSED(FEMaterialPoint& pt) final;
-
-	// Create material point data
-	FEMaterialPointData* CreateMaterialPointData() override;
-
-    // Get base uncoupled elastic material
-    FEUncoupledMaterial* GetBaseMaterial() { return m_mat; }
 
 // Material parameters
 private:

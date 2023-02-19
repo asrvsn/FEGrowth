@@ -14,7 +14,7 @@ bool FEGrowthCoupledMaterial::Init()
 {
     FEUncoupledMaterial* m_umat = dynamic_cast<FEUncoupledMaterial*>((FEElasticMaterial*)m_mat);
     if (m_umat != nullptr) {
-        feLogError("Base elastic material cannot be uncoupled. Choose the 'Growth uncoupled' material instead.");
+        feLogError("Base elastic material cannot be uncoupled.");
         return false;
     }
     return FEGrowthMaterial::Init();
@@ -48,9 +48,4 @@ double FEGrowthCoupledMaterial::StrainEnergyDensity(FEMaterialPoint &mp)
         return this->GetBaseMaterial()->StrainEnergyDensity(mp);
     };
     return WithProjectedDeformation(mp, f);
-}
-
-FEMaterialPointData* FEGrowthCoupledMaterial::CreateMaterialPointData()
-{
-    return GetBaseMaterial()->CreateMaterialPointData();
 }
